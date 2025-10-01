@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Procesos - Organización de Inversiones</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #EF4823;
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 15px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #EF4823, #ff6b47);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(239, 72, 35, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .upload-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .upload-area {
+            border: 3px dashed #EF4823;
+            border-radius: 12px;
+            padding: 40px 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            background: rgba(239, 72, 35, 0.05);
+            border-color: #d63d1f;
+        }
+
+        .upload-area.dragover {
+            background: rgba(239, 72, 35, 0.1);
+            border-color: #d63d1f;
+            transform: scale(1.02);
+        }
+
+        .upload-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #EF4823, #ff6b47);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(239, 72, 35, 0.3);
+            border: none;
+            font-size: 1rem;
+        }
+
+        .upload-label:hover {
+            background: linear-gradient(135deg, #d63d1f, #EF4823);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 72, 35, 0.4);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .file-status.success {
+            background: #e8f5e8;
+            color: #388e3c;
+            display: block;
+        }
+
+        .file-status.error {
+            background: #ffebee;
+            color: #d32f2f;
+            display: block;
+        }
+
+        .tree-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin-bottom: 25px;
+            display: none;
+        }
+
+        .tree-container.active {
+            display: block;
+        }
+
+        .tree-item {
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.2s ease;
+        }
+
+        .tree-item:last-child {
+            border-bottom: none;
+        }
+
+        .tree-header {
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tree-header:hover {
+            background: #f8f9fa;
+            transform: translateX(5px);
+        }
+
+        .tree-header.active {
+            background: linear-gradient(135deg, #EF4823, #ff6b47);
+            color: white;
+        }
+
+        .tree-header.active:hover {
+            background: linear-gradient(135deg, #d63d1f, #EF4823);
+        }
+
+        .tree-content {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .tree-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .tree-header.active .tree-icon {
+            filter: brightness(0) invert(1);
+        }
+
+        .tree-info {
+            flex: 1;
+        }
+
+        .tree-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .tree-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .tree-badge {
+            background: #EF4823;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .tree-header.active .tree-badge {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .expand-icon {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.3s ease;
+            margin-left: 15px;
+        }
+
+        .tree-header.expanded .expand-icon {
+            transform: rotate(90deg);
+        }
+
+        .tree-children {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+            background: #f8f9fb;
+        }
+
+        .tree-children.expanded {
+            max-height: 5000px;
+        }
+
+        .child-item {
+            padding: 15px 25px 15px 65px;
+            border-bottom: 1px solid #e8eaed;
+            transition: all 0.2s ease;
+        }
+
+        .child-item:last-child {
+            border-bottom: none;
+        }
+
+        .child-item:hover {
+            background: #f0f2f5;
+            transform: translateX(5px);
+        }
+
+        .child-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+
+        .child-description {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .child-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .meta-tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .meta-tag.classification {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .meta-tag.countries {
+            background: #e8f5e8;
+            color: #388e3c;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 50px 20px;
+            color: #999;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .tree-header {
+                padding: 15px;
+            }
+            
+            .child-item {
+                padding: 15px 20px 15px 45px;
+            }
+            
+            .upload-container {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .tree-title {
+                font-size: 1rem;
+            }
+        }
+    </style>
+
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:_dlc_DocId msdt:dt="string">TCVK3UAYQW2M-116694948-9379</mso:_dlc_DocId>
+<mso:_dlc_DocIdItemGuid msdt:dt="string">d157e6c3-f4e1-4ae1-819c-731f9fc450ac</mso:_dlc_DocIdItemGuid>
+<mso:_dlc_DocIdUrl msdt:dt="string">https://bolsadesantiago.sharepoint.com/sites/GerenciaRiesgoyCumplimiento/GerenciaProcesosCalidad/_layouts/15/DocIdRedir.aspx?ID=TCVK3UAYQW2M-116694948-9379, TCVK3UAYQW2M-116694948-9379</mso:_dlc_DocIdUrl>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Mapa de Procesos Organizacional</h1>
+            <p>Explorador interactivo del modelo unificado de procesos</p>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <span class="stat-number" id="stat-cadenas">0</span>
+                    <span class="stat-label">Cadenas</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="stat-macroprocesos">0</span>
+                    <span class="stat-label">Macroprocesos</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="stat-procesos">0</span>
+                    <span class="stat-label">Procesos</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="stat-subprocesos">0</span>
+                    <span class="stat-label">Subprocesos</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="tree-container" id="treeContainer">
+            <div id="treeContent">
+                <div class="no-results">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#EF4823" stroke-width="1.5">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14,2 14,8 20,8"></polyline>
+                    </svg>
+                    <p>Carga tu archivo CSV para explorar los procesos</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="upload-container" id="uploadContainer">
+            <div class="upload-area" id="uploadArea">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#EF4823" stroke-width="2" style="margin-bottom: 15px;">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14,2 14,8 20,8"></polyline>
+                </svg>
+                <h3 style="color: #EF4823; margin-bottom: 10px;">Arrastra tu archivo CSV aquí</h3>
+                <p style="color: #666; margin-bottom: 20px;">o haz clic para seleccionarlo</p>
+                
+                <label for="csvFile" class="upload-label">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7,10 12,15 17,10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Seleccionar archivo CSV
+                </label>
+                <input type="file" id="csvFile" class="file-input" accept=".csv">
+            </div>
+            <div id="fileStatus" class="file-status"></div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let processData = [];
+        let treeStructure = {};
+
+        // Inicializar aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            setupFileUpload();
+            setupDragAndDrop();
+        }
+
+        function setupFileUpload() {
+            const fileInput = document.getElementById('csvFile');
+            fileInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    processFile(file);
+                }
+            });
+        }
+
+        function setupDragAndDrop() {
+            const uploadArea = document.getElementById('uploadArea');
+            
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    processFile(files[0]);
+                }
+            });
+            
+            uploadArea.addEventListener('click', function() {
+                document.getElementById('csvFile').click();
+            });
+        }
+        
+        function processFile(file) {
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                showFileStatus('Por favor selecciona un archivo CSV válido', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const csvContent = e.target.result;
+                    processData = parseCSV(csvContent);
+                    
+                    if (processData.length === 0) {
+                        showFileStatus('El archivo CSV está vacío o no tiene el formato correcto', 'error');
+                        return;
+                    }
+                    
+                    treeStructure = buildTreeStructure(processData);
+                    renderTree();
+                    updateStats();
+                    showInterface();
+                    
+                    showFileStatus('Archivo cargado exitosamente: ' + processData.length + ' registros procesados', 'success');
+                    
+                } catch (error) {
+                    console.error('Error processing CSV:', error);
+                    showFileStatus('Error al procesar el archivo CSV: ' + error.message, 'error');
+                }
+            };
+            
+            reader.onerror = function() {
+                showFileStatus('Error al leer el archivo', 'error');
+            };
+            
+            reader.readAsText(file, 'utf-8');
+        }
+        
+        function showInterface() {
+            document.getElementById('treeContainer').classList.add('active');
+        }
+        
+        function showFileStatus(message, type) {
+            const fileStatus = document.getElementById('fileStatus');
+            fileStatus.textContent = message;
+            fileStatus.className = 'file-status ' + type;
+        }
+        
+        function updateStats() {
+            const cadenas = getUniqueValues(processData, 'Cadena de valor');
+            const macroprocesos = getUniqueValues(processData, 'Macroproceso');
+            const procesos = getUniqueValues(processData, 'Proceso');
+            const subprocesos = processData.filter(function(row) { 
+                return row.Subproceso && row.Subproceso.trim() !== '' && row.Subproceso !== 'null'; 
+            });
+            
+            document.getElementById('stat-cadenas').textContent = cadenas.length;
+            document.getElementById('stat-macroprocesos').textContent = macroprocesos.length;
+            document.getElementById('stat-procesos').textContent = procesos.length;
+            document.getElementById('stat-subprocesos').textContent = subprocesos.length;
+        }
+
+        function getUniqueValues(data, field) {
+            const values = data.map(function(row) { return row[field]; });
+            const unique = values.filter(function(value, index, self) {
+                return value && value !== 'null' && value.trim() !== '' && self.indexOf(value) === index;
+            });
+            return unique;
+        }
+
+        function generateSafeId(text) {
+            if (!text) return 'undefined';
+            return text
+                .toLowerCase()
+                .replace(/[áàäâã]/g, 'a')
+                .replace(/[éèëê]/g, 'e')
+                .replace(/[íìïî]/g, 'i')
+                .replace(/[óòöôõ]/g, 'o')
+                .replace(/[úùüû]/g, 'u')
+                .replace(/[ñ]/g, 'n')
+                .replace(/[ç]/g, 'c')
+                .replace(/[^a-z0-9]/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+        }
+
+        function parseCSV(csvText) {
+            // Normalizar saltos de línea
+            csvText = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            let row = [];
+            let headers = null;
+            
+            for (let i = 0; i < csvText.length; i++) {
+                const char = csvText[i];
+                const nextChar = csvText[i + 1];
+                
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    row.push(current.trim());
+                    current = '';
+                } else if (char === '\n' && !inQuotes) {
+                    row.push(current.trim());
+                    
+                    if (!headers) {
+                        headers = row.map(function(h) { return h.replace(/"/g, '').trim(); });
+                        console.log('Headers encontrados:', headers);
+                    } else if (row.length >= headers.length && row.some(cell => cell.trim() !== '')) {
+                        const rowObj = {};
+                        for (let j = 0; j < headers.length; j++) {
+                            let value = row[j] || '';
+                            if (value.startsWith('"') && value.endsWith('"')) {
+                                value = value.slice(1, -1);
+                            }
+                            rowObj[headers[j]] = value.trim();
+                        }
+                        
+                        // Verificar que tenga datos válidos
+                        if (rowObj['Cadena de valor'] && rowObj['Cadena de valor'] !== 'null' && rowObj['Cadena de valor'].trim() !== '') {
+                            result.push(rowObj);
+                        }
+                    }
+                    
+                    row = [];
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            // Procesar última fila si existe
+            if (current || row.length > 0) {
+                row.push(current.trim());
+                if (headers && row.length >= headers.length && row.some(cell => cell.trim() !== '')) {
+                    const rowObj = {};
+                    for (let j = 0; j < headers.length; j++) {
+                        let value = row[j] || '';
+                        if (value.startsWith('"') && value.endsWith('"')) {
+                            value = value.slice(1, -1);
+                        }
+                        rowObj[headers[j]] = value.trim();
+                    }
+                    
+                    if (rowObj['Cadena de valor'] && rowObj['Cadena de valor'] !== 'null' && rowObj['Cadena de valor'].trim() !== '') {
+                        result.push(rowObj);
+                    }
+                }
+            }
+            
+            console.log('Parser CSV: ' + result.length + ' registros procesados');
+            return result;
+        }
+
+        function buildTreeStructure(data) {
+            const structure = {};
+            
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                const cadena = row['Cadena de valor'];
+                const macroproceso = row['Macroproceso'];
+                const proceso = row['Proceso'];
+                
+                if (!cadena || !macroproceso || !proceso) continue;
+                
+                if (!structure[cadena]) {
+                    structure[cadena] = {
+                        title: cadena,
+                        macroprocesos: {}
+                    };
+                }
+                
+                if (!structure[cadena].macroprocesos[macroproceso]) {
+                    structure[cadena].macroprocesos[macroproceso] = {
+                        title: macroproceso,
+                        description: row['Descripción Macroproceso'] || '',
+                        procesos: {}
+                    };
+                }
+                
+                if (!structure[cadena].macroprocesos[macroproceso].procesos[proceso]) {
+                    structure[cadena].macroprocesos[macroproceso].procesos[proceso] = {
+                        title: proceso,
+                        description: row['Descripción Proceso'] || '',
+                        classification: row['Clasificación'] || '',
+                        countries: new Set(),
+                        subprocesos: []
+                    };
+                }
+                
+                // Agregar países únicos
+                if (row['Países Aplicables'] && row['Países Aplicables'].trim() !== '') {
+                    structure[cadena].macroprocesos[macroproceso].procesos[proceso].countries.add(row['Países Aplicables']);
+                }
+                
+                // Agregar subproceso si existe
+                if (row['Subproceso'] && row['Subproceso'].trim() !== '' && row['Subproceso'] !== 'null') {
+                    const existingSubproceso = structure[cadena].macroprocesos[macroproceso].procesos[proceso].subprocesos.find(
+                        sub => sub.title === row['Subproceso'] && sub.description === row['Descripción Subproceso']
+                    );
+                    
+                    if (!existingSubproceso) {
+                        structure[cadena].macroprocesos[macroproceso].procesos[proceso].subprocesos.push({
+                            title: row['Subproceso'],
+                            description: row['Descripción Subproceso'] || '',
+                            countries: row['Países Aplicables'] || ''
+                        });
+                    }
+                }
+            }
+            
+            // Convertir Sets de países a strings
+            Object.keys(structure).forEach(cadenaKey => {
+                Object.keys(structure[cadenaKey].macroprocesos).forEach(macroKey => {
+                    Object.keys(structure[cadenaKey].macroprocesos[macroKey].procesos).forEach(procesoKey => {
+                        const proceso = structure[cadenaKey].macroprocesos[macroKey].procesos[procesoKey];
+                        proceso.countries = Array.from(proceso.countries).join(', ');
+                    });
+                });
+            });
+            
+            return structure;
+        }
+
+        function getIcon(type) {
+            const icons = {
+                cadena: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9,22 9,12 15,12 15,22"></polyline></svg>',
+                macroproceso: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect></svg>',
+                proceso: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="m12 1 0 6m0 6 0 6m11-7-6 0m-6 0-6 0"></path></svg>',
+                expand: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"></polyline></svg>'
+            };
+            return icons[type] || '';
+        }
+
+        function renderTree() {
+            const container = document.getElementById('treeContent');
+            let html = '';
+
+            const cadenaKeys = Object.keys(treeStructure);
+            for (let i = 0; i < cadenaKeys.length; i++) {
+                const cadenaKey = cadenaKeys[i];
+                const cadena = treeStructure[cadenaKey];
+                const macroprocesosCount = Object.keys(cadena.macroprocesos).length;
+                
+                html += '<div class="tree-item">';
+                html += '<div class="tree-header" onclick="toggleExpand(this)" data-target="cadena-' + generateSafeId(cadenaKey) + '">';
+                html += '<div class="tree-content">';
+                html += '<div class="tree-icon">' + getIcon('cadena') + '</div>';
+                html += '<div class="tree-info">';
+                html += '<div class="tree-title">' + cadena.title + '</div>';
+                html += '<div class="tree-subtitle">Cadena de valor principal</div>';
+                html += '</div>';
+                html += '</div>';
+                html += '<div class="tree-badge">' + macroprocesosCount + ' macroprocesos</div>';
+                html += '<div class="expand-icon">' + getIcon('expand') + '</div>';
+                html += '</div>';
+                html += '<div class="tree-children" id="cadena-' + generateSafeId(cadenaKey) + '">';
+                html += renderMacroprocesos(cadena.macroprocesos);
+                html += '</div>';
+                html += '</div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        function renderMacroprocesos(macroprocesos) {
+            let html = '';
+            
+            const macroKeys = Object.keys(macroprocesos);
+            for (let i = 0; i < macroKeys.length; i++) {
+                const macroKey = macroKeys[i];
+                const macro = macroprocesos[macroKey];
+                const procesosCount = Object.keys(macro.procesos).length;
+                
+                html += '<div class="child-item">';
+                html += '<div class="tree-header" onclick="toggleExpand(this)" data-target="macro-' + generateSafeId(macroKey) + '">';
+                html += '<div class="tree-content">';
+                html += '<div class="tree-icon">' + getIcon('macroproceso') + '</div>';
+                html += '<div class="tree-info">';
+                html += '<div class="tree-title">' + macro.title + '</div>';
+                html += '<div class="tree-subtitle">' + (macro.description || 'Sin descripción') + '</div>';
+                html += '</div>';
+                html += '</div>';
+                html += '<div class="tree-badge">' + procesosCount + ' procesos</div>';
+                html += '<div class="expand-icon">' + getIcon('expand') + '</div>';
+                html += '</div>';
+                html += '<div class="tree-children" id="macro-' + generateSafeId(macroKey) + '">';
+                html += renderProcesos(macro.procesos);
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            return html;
+        }
+
+        function renderProcesos(procesos) {
+            let html = '';
+            
+            const procesoKeys = Object.keys(procesos);
+            for (let i = 0; i < procesoKeys.length; i++) {
+                const procesoKey = procesoKeys[i];
+                const proceso = procesos[procesoKey];
+                const subprocesosCount = proceso.subprocesos.length;
+                const safeId = generateSafeId(procesoKey);
+                
+                html += '<div class="child-item">';
+                html += '<div class="tree-header" onclick="toggleExpand(this)" data-target="proceso-' + safeId + '">';
+                html += '<div class="tree-content">';
+                html += '<div class="tree-icon">' + getIcon('proceso') + '</div>';
+                html += '<div class="tree-info">';
+                html += '<div class="tree-title">' + proceso.title + '</div>';
+                html += '<div class="tree-subtitle">' + (proceso.description || 'Sin descripción') + '</div>';
+                html += '</div>';
+                html += '</div>';
+                html += '<div class="tree-badge">' + subprocesosCount + ' subprocesos</div>';
+                html += '<div class="expand-icon">' + getIcon('expand') + '</div>';
+                html += '</div>';
+                html += '<div class="tree-children" id="proceso-' + safeId + '">';
+                html += renderSubprocesos(proceso.subprocesos, proceso.classification, proceso.countries);
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            return html;
+        }
+
+        function renderSubprocesos(subprocesos, classification, countries) {
+            let html = '';
+            
+            for (let i = 0; i < subprocesos.length; i++) {
+                const subproceso = subprocesos[i];
+                
+                html += '<div class="child-item">';
+                html += '<div class="child-title">' + (subproceso.title || 'Sin título') + '</div>';
+                html += '<div class="child-description">' + (subproceso.description || 'Sin descripción') + '</div>';
+                html += '<div class="child-meta">';
+                
+                if (classification) {
+                    html += '<span class="meta-tag classification">' + classification + '</span>';
+                }
+                
+                if (subproceso.countries || countries) {
+                    html += '<span class="meta-tag countries">' + (subproceso.countries || countries) + '</span>';
+                }
+                
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            // Si no hay subprocesos, mostrar un mensaje
+            if (subprocesos.length === 0) {
+                html += '<div class="child-item">';
+                html += '<div class="child-title">Sin subprocesos definidos</div>';
+                html += '<div class="child-description">Este proceso no tiene subprocesos asociados.</div>';
+                html += '<div class="child-meta">';
+                if (classification) {
+                    html += '<span class="meta-tag classification">' + classification + '</span>';
+                }
+                if (countries) {
+                    html += '<span class="meta-tag countries">' + countries + '</span>';
+                }
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            return html;
+        }
+
+        function toggleExpand(header) {
+            const targetId = header.getAttribute('data-target');
+            const target = document.getElementById(targetId);
+            const isExpanded = header.classList.contains('expanded');
+            
+            if (!target) {
+                console.error('Target element not found for ID:', targetId);
+                return;
+            }
+            
+            if (isExpanded) {
+                header.classList.remove('expanded', 'active');
+                target.classList.remove('expanded');
+            } else {
+                header.classList.add('expanded', 'active');
+                target.classList.add('expanded');
+            }
+        }
+    </script>
+</body>
+</html>
